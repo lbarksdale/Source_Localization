@@ -16,21 +16,70 @@ def create_er_graph(num_vertices):
     er_graph.vs[2]["vtype"] = 1
     return er_graph
 
-def plot_graph(g, save=False):
+def plot_graph(g, save=False, show_vtype=False):
     # Set the graph layout to something fairly nice for plotting
     Graph.layout_fruchterman_reingold(g)
 
     # Plot in matplotlib
     # Note that attributes can be set globally (e.g., vertex_size), or set individually using arrays (e.g., vertex_color)
     fig, ax = plt.subplots(figsize=(5, 5))
-    ig.plot(
-        g,
-        target=ax,
-        vertex_size=10,
-        vertex_frame_width=2.0,
-        vertex_frame_color="white",
-        vertex_color=["salmon" if vtype == -1 else "green" if vtype == 1 else "steelblue" for vtype in g.vs["vtype"]],
-    )
+    if show_vtype:
+        ig.plot(
+            g,
+            target=ax,
+            vertex_size=10,
+            vertex_frame_width=2.0,
+            vertex_frame_color="white",
+            # vertex_label=g.vs["vertex_num"],
+            vertex_color=["salmon" if vtype == -1 else "green" if vtype == 1 else "steelblue" for vtype in g.vs["vtype"]],
+        )
+    else:
+        ig.plot(
+            g,
+            target=ax,
+            vertex_size=10,
+            vertex_frame_width=2.0,
+            vertex_frame_color="white",
+        )
+
     if save:
         plt.savefig("sampleGraph.png")
     plt.show()
+
+def get_random_spanning_tree(g, root=0):
+    total_vertices = g.vcount()
+    if total_vertices == 0:
+        raise ValueError("Cannot build a spanning tree from an empty graph.")
+    if not 0 <= root < total_vertices:
+        raise ValueError(f"Root vertex {root} is out of range for a graph with {total_vertices} vertices.")
+    if not g.is_connected():
+        raise ValueError("A spanning tree can only be built from a connected graph.")
+
+    spanning_tree = Graph(n=total_vertices, directed=g.is_directed())
+
+    for attribute_name in g.vs.attributes():
+        spanning_tree.vs[attribute_name] = list(g.vs[attribute_name])
+
+    current_vertex = root
+    visited_vertices = {root}
+
+    while len(visited_vertices) < total_vertices:
+        incident_vertices = g.neighbors(current_vertex)
+        if not incident_vertices:
+            raise ValueError(f"Vertex {current_vertex} has no neighbors in a graph marked connected.")
+
+        random_vertex = int(np.random.choice(incident_vertices))
+        if random_vertex not in visited_vertices:
+            edge_id = g.get_eid(current_vertex, random_vertex, directed=g.is_directed(), error=False)
+            edge_attributes = {}
+            if edge_id != -1:
+                edge_attributes = {
+                    attribute_name: g.es[edge_id][attribute_name]
+                    for attribute_name in g.es.attributes()
+                }
+            spanning_tree.add_edge(current_vertex, random_vertex, **edge_attributes)
+            visited_vertices.add(random_vertex)
+
+        current_vertex = random_vertex
+
+    return spanning_tree
