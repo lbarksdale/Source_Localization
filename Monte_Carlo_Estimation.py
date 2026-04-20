@@ -222,13 +222,13 @@ if __name__ == "__main__":
     ##########################################################################
     # Code to create Monte Carlo simulation comparison for a graph given in filename
     ##########################################################################
-    filename = "diamond.txt"
+    filename = "unit_delays.txt"
     g = Graph.Read_Adjacency(filename, attribute="weight", mode="undirected")
-    n_vertices = 4
+    n_vertices = g.vcount()
     vertexColors = np.zeros(n_vertices)
     g.vs["vtype"] = vertexColors.tolist()
     g.vs[0]["vtype"] = 1
-    g.vs[3]["vtype"] = -1
+    g.vs[1]["vtype"] = -1
     # g.vs[3]["vtype"] = -1
     # g.vs[4]["vtype"] = -1
     # g.vs["obs_number"] = vertexColors.tolist()
@@ -238,6 +238,7 @@ if __name__ == "__main__":
 
     n = 10000
     source = 1
+    obs = 0
 
     obs_1_times = simulate_infections(g, 2, source, n)
     # obs_2_times = simulate_infections(g, 3, source, n)
@@ -250,12 +251,21 @@ if __name__ == "__main__":
     # plot_histogram(obs_3_times, observer_value, "Observer_3_histogram.png", "Source Candidate 3 Infection Times")
 
     # print("Observer infection time: ", observer_value)
-    print("Source 1:", np.abs(np.mean(obs_1_times)))
+    mean_infection_time = np.abs(np.mean(obs_1_times))
+    print("Mean observer infection time:", mean_infection_time)
     # print("Source 2:", np.abs(np.mean(obs_2_times)))
     # print("Source 3:", np.abs(np.mean(obs_3_times)))
 
+    # Center and scale the mean infection time
+    expected_infection_time = Graph.distances(g, source=source, target=obs, weights=g.es["weight"])[0][0]
+
+    # Let's test over a lot of possible numbers of paths
+    possible_num_paths = np.linspace(1, 101, 100)
+
+
+
     # Plot in matplotlib
-    # Note that attributes can be set globally (e.g. vertex_size), or set individually using arrays (e.g. vertex_color)
+    # Note that attributes can be set globally (e.g., vertex_size), or set individually using arrays (e.g., vertex_color)
     fig, ax = plt.subplots(figsize=(5, 5))
     ig.plot(
         g,
