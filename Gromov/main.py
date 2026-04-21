@@ -4,7 +4,7 @@ import numpy as np
 from igraph import Graph
 
 from Graph_Basics import create_er_graph, plot_graph, get_random_spanning_tree
-from Gromov.Gromov_Operations import get_gromov_matrix, g_convex_combination, get_distance
+from Gromov.Gromov_Operations import get_gromov_matrix, g_convex_combination, get_distance, reconstruct_tree_from_gromov
 
 
 def create_one_cycle_graph(n_vertices):
@@ -52,3 +52,7 @@ if __name__ == "__main__":
 
     print("G-Convex Combination:\n", combined_matrix)
     print("Time to infect: ", get_distance(combined_matrix, 0, 1))
+
+    reconstructed_graph = reconstruct_tree_from_gromov(combined_matrix)
+    plot_graph(reconstructed_graph, show_vtype=True)
+    print("Reconstructed Tree Distance: ", get_distance(combined_matrix, 0, 1))
