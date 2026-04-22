@@ -44,19 +44,20 @@ def iterate_graph(gr):
     gr.simplify(multiple=False, loops=True)
 
     # Return the infection time of the vertex with the smallest time
-    # print("Smallest time: ", smallest_time)
     return next_vertex_infected_time
 
 
-if __name__ == "__main__":
-    g = create_er_graph(100000)
+def get_infection_time_via_compression(gr, num_observers):
     infection_time = 0
 
-    # plot_graph(g)
+    while gr.vs[1]["vtype"] < num_observers - 1:
+        infection_time += iterate_graph(gr)
 
-    # Run while source and observer are different vertices
-    num_observers = 1
-    while g.vs[1]["vtype"] < num_observers - 1:
-        infection_time += iterate_graph(g)
-    print("Infection time: ", infection_time)
+    return infection_time
+
+
+if __name__ == "__main__":
+    g = create_er_graph(100)
+
+    print(get_infection_time_via_compression(g, 1))
     
