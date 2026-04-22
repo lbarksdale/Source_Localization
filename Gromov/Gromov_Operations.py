@@ -256,4 +256,8 @@ def reconstruct_tree_from_gromov(m):
         g.contract_vertices(membership, combine_attrs="first")
         Graph.simplify(g, multiple=True, loops=True, combine_edges="first")
 
+    # Color the source and the observers
+    g.vs[0]["vtype"] = -1
+    g.vs[1]["vtype"] = 1
+
     return g
