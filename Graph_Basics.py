@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import igraph as ig
 
 # Creates an Erdos-Renyi graph with a specified number of vertices
-# Labels vertex 1 (source) with vtype=0, vertex 2 (observer) with vtype=1
+# Labels vertex 0 (source) with vtype=-1, vertex 1 (observer) with vtype=1
 def create_er_graph(num_vertices):
     p = 1.2 * np.log(num_vertices) / num_vertices
     er_graph = Graph.Erdos_Renyi(num_vertices, p)
@@ -12,8 +12,12 @@ def create_er_graph(num_vertices):
         er_graph = Graph.Erdos_Renyi(num_vertices, p)
     vertex_types = np.zeros(num_vertices)
     er_graph.vs["vtype"] = vertex_types.tolist()
-    er_graph.vs[1]["vtype"] = -1
-    er_graph.vs[2]["vtype"] = 1
+    er_graph.vs[0]["vtype"] = -1
+    er_graph.vs[1]["vtype"] = 1
+
+    # Add edge weights, all 1
+    weights = np.ones(er_graph.ecount())
+    er_graph.es["weight"] = weights.tolist()
     return er_graph
 
 def plot_graph(g, save=False, show_vtype=False):
