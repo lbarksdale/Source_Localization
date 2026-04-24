@@ -13,10 +13,19 @@ def sample_exponential(lambda_):
 
 
 # Run a single iteration of time, i.e., contract one edge in the graph
-def iterate_graph(gr):
+def _get_vertex_attr_combiners(gr):
+    combiners = {}
+    for attribute_name in gr.vs.attributes():
+        combiners[attribute_name] = "sum" if attribute_name == "vtype" else "first"
+    return combiners
+
+
+def iterate_graph(gr, source_vertex=0):
     # First, detect edges incident to source
-    incident_vertices = gr.neighbors(1)
+    incident_vertices = gr.neighbors(source_vertex)
     num_edges = len(incident_vertices)
+    if num_edges == 0:
+        raise ValueError(f"Source vertex {source_vertex} has no remaining neighbors to infect.")
     next_vertex_infected_time = sample_exponential(lambda_=num_edges)
     next_vertex_infected = random.choice(incident_vertices)
 
@@ -33,11 +42,10 @@ def iterate_graph(gr):
 
     # Contract the edge between source and vertex with the smallest time
     mapping = list(range(gr.vcount()))
-    mapping[next_vertex_infected] = 1
-    # Combine the vertex attributes (notably vtype) by multiplying
-    # When an observer is absorbed into the source, the source vtype iterates
-    # Once all observers are absorbed, the source vtype will equal the number of observers
-    gr.contract_vertices(mapping, combine_attrs="sum")
+    mapping[next_vertex_infected] = source_vertex
+    # Sum only vtype. Other attributes, such as names, are not guaranteed to be numeric.
+    # When an observer is absorbed into the source, the source vtype iterates.
+    gr.contract_vertices(mapping, combine_attrs=_get_vertex_attr_combiners(gr))
 
     # Remove self-loops but not duplicate edges. Duplicate edges are important to keep
     # as they encode information about transmission likelihood
@@ -47,11 +55,12 @@ def iterate_graph(gr):
     return next_vertex_infected_time
 
 
-def get_infection_time_via_compression(gr, num_observers):
+def get_infection_time_via_compression(gr, num_observers, source_vertex=0):
+    gr = gr.copy()
     infection_time = 0
 
-    while gr.vs[1]["vtype"] < num_observers - 1:
-        infection_time += iterate_graph(gr)
+    while gr.vs[source_vertex]["vtype"] < num_observers - 1:
+        infection_time += iterate_graph(gr, source_vertex=source_vertex)
 
     return infection_time
 
