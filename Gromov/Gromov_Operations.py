@@ -4,6 +4,8 @@ import igraph as ig
 from igraph import Graph
 import numpy as np
 
+from Graph_Basics import get_random_spanning_tree
+
 
 def get_gromov_product(graph, v1, v2, root):
     d1 = graph.distances(source=v1, target=root)[0][0]
@@ -12,20 +14,39 @@ def get_gromov_product(graph, v1, v2, root):
     return (1 / 2) * (d1 + d2 - d3)
 
 
+def get_gromov_product_from_distances(distances, v1, v2, root):
+    return (1/2) * (distances[v1][root] + distances[v2][root] - distances[v1][v2])
+
+
+def get_distance_matrix(graph):
+    matrix_size = graph.vcount()
+    matrix = np.zeros((matrix_size, matrix_size))
+    for i in range(matrix_size):
+        for j in range(i + 1, matrix_size):
+            matrix[i, j] = graph.distances(source=i, target=j)[0][0]
+
+    matrix = matrix + matrix.T
+    return matrix
+
+
+
 def get_gromov_matrix(graph, root):
     matrix_size = graph.vcount() - 1
     matrix = np.zeros((matrix_size, matrix_size))
-
-    # Problem: If root is not the final vertex in the graph, the indexing is getting messed up
+    distances = get_distance_matrix(graph)
 
     # Fill the upper triangle of the matrix with the Gromov products
     for row_vertex in range(0, matrix_size):
         for col_vertex in range(row_vertex + 1, matrix_size):
-            # Correct indexing and calculate Gromov product
+            # Indexing can be thrown off because the root is not included in the Gromov matrix
+            # Correct the indexing and calculate the Gromov product
             fixed_row_vertex = row_vertex if row_vertex < root else row_vertex + 1
             fixed_col_vertex = col_vertex if col_vertex < root else col_vertex + 1
 
-            matrix[row_vertex, col_vertex] = get_gromov_product(graph, fixed_row_vertex, fixed_col_vertex, root)
+            # Old method of getting Gromov product, deprecated.
+            # matrix[row_vertex, col_vertex] = get_gromov_product(graph, fixed_row_vertex, fixed_col_vertex, root)
+
+            matrix[row_vertex, col_vertex] = get_gromov_product_from_distances(distances, fixed_row_vertex, fixed_col_vertex, root)
 
     # Make matrix symmetric
     matrix = matrix + matrix.T
@@ -34,6 +55,7 @@ def get_gromov_matrix(graph, root):
     for i in range(matrix_size):
         # Correct indexing
         target_vertex = i if i < root else i + 1
+        # Gromov product
         matrix[i, i] = graph.distances(source=root, target=target_vertex)[0][0]
 
     return matrix
@@ -261,3 +283,14 @@ def reconstruct_tree_from_gromov(m):
     g.vs[1]["vtype"] = 1
 
     return g
+
+
+def get_multiconvex_combination(g, num_trees):
+    gromov_matrices = []
+    root = 0
+    for i in range(num_trees):
+        current_span_tree = get_random_spanning_tree(g, root)
+        gromov_matrices.append(get_gromov_matrix(current_span_tree, root))
+
+    average_matrix = np.mean(gromov_matrices, axis=0)
+    return g_convex_combination(average_matrix, average_matrix, 0.5)
