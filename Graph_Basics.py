@@ -34,7 +34,7 @@ def plot_graph(g, save=False, show_vtype=False):
             vertex_size=10,
             vertex_frame_width=2.0,
             vertex_frame_color="white",
-            edge_label=g.es["weight"],
+            edge_label=[None if len(g.es["weight"]) > 10 else g.es["weight"]],
             # vertex_label=g.vs["vertex_num"],
             vertex_color=["salmon" if vtype == -1 else "green" if vtype == 1 else "steelblue" for vtype in g.vs["vtype"]],
         )
