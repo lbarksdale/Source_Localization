@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from igraph import Graph
 
-from Graph_Basics import create_er_graph, plot_graph, get_random_spanning_tree
+from Graph_Basics import create_er_graph, plot_graph
 from Graph_Compression.mc_graph_compression import get_infection_time_via_compression
 from Gromov.Gromov_Operations import get_distance, \
-    reconstruct_tree_from_gromov, get_multiconvex_combination, get_gromov_matrix
+    reconstruct_tree_from_gromov, get_multiconvex_combination, test_graph
 
 
 def create_one_cycle_graph(n_vertices):
@@ -32,7 +32,6 @@ def test_many_graphs():
     g.vs["vertex_num"] = vertex_numbers.tolist()
 
     # Create a spanning tree and find Gromov matrix
-    tree_root = 0
     plot_graph(g, show_vtype=True)
 
     combined_matrix = get_multiconvex_combination(g, 24)
@@ -47,26 +46,7 @@ def test_many_graphs():
 
     # First: Sample lots with one graph!
     num_samples = 10000
-    full_graph_infection_times = np.zeros(num_samples)
-    gromov_infection_times = np.zeros(num_samples)
-    for i in range(num_samples):
-        full_graph_infection_times[i] = get_infection_time_via_compression(g, 1)
-        gromov_infection_times[i] = get_infection_time_via_compression(reconstructed_graph, 1)
-
-    plt.hist(full_graph_infection_times, bins=50, density=True, alpha=0.5, label="Full graph infection times")
-    plt.hist(gromov_infection_times, bins=50, density=True, alpha=0.5, label="Gromov spanning tree infection times")
-    plt.title("Spanning tree times vs full graph times")
-    plt.xlabel("Infection time")
-    plt.ylabel("Probability density")
-    plt.legend()
-    plt.savefig("gromov_singlegraph_comparison.png")
-    plt.show()
-
-    true_average_infection_time = np.average(full_graph_infection_times)
-    print("True average infection time: ", true_average_infection_time)
-
-    gromov_average_infection_time = np.average(gromov_infection_times)
-    print("Gromov average infection time: ", gromov_average_infection_time)
+    test_graph(g, num_samples=num_samples)
 
     # Second: Compare across many graphs!
     quick_sample_size = 1000
@@ -115,41 +95,15 @@ def test_diamond_graph():
 
     plot_graph(g, show_vtype=True)
 
-    span_tree = get_random_spanning_tree(g, root=0)
-    plot_graph(span_tree, show_vtype=True)
-    print(get_gromov_matrix(span_tree, 0))
+    test_graph(g)
 
 
 def test_big_graph(num_trees=4, num_vertices=50):
     g = create_er_graph(num_vertices)
-    tree_root = 0
-    combined_matrix = get_multiconvex_combination(g, num_trees)
 
-    reconstructed_graph = reconstruct_tree_from_gromov(combined_matrix)
-
-    # First: Sample lots with one graph!
     num_samples = 1000
-    full_graph_infection_times = np.zeros(num_samples)
-    gromov_infection_times = np.zeros(num_samples)
-    for i in range(num_samples):
-        full_graph_infection_times[i] = get_infection_time_via_compression(g, 1)
-        gromov_infection_times[i] = get_infection_time_via_compression(reconstructed_graph, 1)
-
-    plt.hist(full_graph_infection_times, bins=50, density=True, alpha=0.5, label="Full graph infection times")
-    plt.hist(gromov_infection_times, bins=50, density=True, alpha=0.5, label="Gromov spanning tree infection times")
-    plt.title("Spanning tree times vs full graph times")
-    plt.xlabel("Infection time")
-    plt.ylabel("Probability density")
-    plt.legend()
-    plt.savefig("gromov_singlegraph_comparison.png")
-    plt.show()
-
-    true_average_infection_time = np.average(full_graph_infection_times)
-    print("True average infection time: ", true_average_infection_time)
-
-    gromov_average_infection_time = np.average(gromov_infection_times)
-    print("Gromov average infection time: ", gromov_average_infection_time)
+    test_graph(g, num_trees, num_samples)
 
 
 if __name__ == "__main__":
-    test_big_graph()
+    test_diamond_graph()
