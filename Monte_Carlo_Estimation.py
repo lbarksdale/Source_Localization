@@ -1,12 +1,11 @@
 # Test file to try out using Devlin Costello's source localization package
-from fileinput import filename
 import igraph as ig
 import matplotlib.pyplot as plt
 import numpy as np
 from graphExportToJSON import simulate_edge_delays, create_graph_weights
-from scipy.stats import alpha
-from tree_source_localization.Tree import Tree
 from igraph import Graph
+from tree_source_localization.Tree import Tree
+
 
 # Method to get the estimated source using Devlin's library using the expected spanning tree
 # This method is poorly implemented and should not be used
