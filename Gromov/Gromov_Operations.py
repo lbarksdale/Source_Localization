@@ -5,8 +5,8 @@ from igraph import Graph
 import numpy as np
 import matplotlib.pyplot as plt
 
-from Graph_Basics import get_random_spanning_tree
-from Graph_Compression.mc_graph_compression import get_infection_time_via_compression
+from Graph_Basics import get_random_spanning_tree, plot_graph
+from Graph_Compression.mc_graph_compression import get_infection_time_via_compression, sample_exponential
 
 
 def get_gromov_product(graph, v1, v2, root):
@@ -300,12 +300,16 @@ def get_multiconvex_combination(g, num_trees):
 def test_graph(g, num_trees=24, num_samples = 1000):
     combined_matrix = get_multiconvex_combination(g, num_trees)
     reconstructed_graph = reconstruct_tree_from_gromov(combined_matrix)
+    plot_graph(reconstructed_graph, show_vtype=True)
 
     full_graph_infection_times = np.zeros(num_samples)
-    gromov_infection_times = np.zeros(num_samples)
+    sample_infection_on_gromov_tree(reconstructed_graph, num_samples=num_samples)
+
     for i in range(num_samples):
         full_graph_infection_times[i] = get_infection_time_via_compression(g, 1)
-        gromov_infection_times[i] = get_infection_time_via_compression(reconstructed_graph, 1)
+        # gromov_infection_times[i] = get_infection_time_via_compression(reconstructed_graph, 1)
+
+    gromov_infection_times = sample_infection_on_gromov_tree(reconstructed_graph, num_samples=num_samples)
 
     plt.hist(full_graph_infection_times, bins=50, density=True, alpha=0.5, label="Full graph infection times")
     plt.hist(gromov_infection_times, bins=50, density=True, alpha=0.5, label="Gromov spanning tree infection times")
@@ -321,3 +325,16 @@ def test_graph(g, num_trees=24, num_samples = 1000):
 
     gromov_average_infection_time = np.average(gromov_infection_times)
     print("Gromov average infection time: ", gromov_average_infection_time)
+
+    return [true_average_infection_time, gromov_average_infection_time]
+
+
+def sample_infection_on_gromov_tree(gromov_tree, num_samples=1000):
+    path = gromov_tree.get_shortest_paths(v=0, to=1, weights="weight", output="epath")[0]
+    infection_times = np.zeros(num_samples)
+    for i in range(num_samples):
+        sample_time = 0
+        for edge in path:
+            sample_time += sample_exponential(1/gromov_tree.es[edge]["weight"])
+        infection_times[i] = sample_time
+    return infection_times
